@@ -1,0 +1,19 @@
+# Independent archive verification of one dataset.h5 window.
+# Run from Project/:  python scripts/crosscheck_dataset_windows.py --config src/plotting/examples/crosscheck.toml
+# Output: Project/PVPlots/<name>/ {config.toml, crosscheck.png, comparison.json, metadata.json}
+# Exit code: 0 pass, 2 mismatch, 1 error.
+
+[check]
+project_root = "../../.."
+name = "D01_L01A_crosscheck_train_1000"
+dpi = 200
+
+[dataset]
+path = "datasets/D01_L01A_dataset/dataset.h5"
+split = "train"
+index = 1000
+
+# D01_L01A_dataset was built when the project lived in another folder; map
+# the recorded source paths to the current location (sizes are verified).
+[sources]
+path_prefix_map = [["/Users/christian/Desktop/Uni/Belle2AI/Project", "/Users/christian/Belle2AI/Project"]]

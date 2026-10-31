@@ -1,0 +1,51 @@
+# Example training configuration for the convolutional VAE (models/cnn_vae).
+# Run from Project/:  python -m train --config src/models/cnn_vae/exampleTrain.toml
+# This exact file is copied into the trained-model folder.
+# Window size, stride/overlap and normalization come from dataset.h5 and are
+# NOT set here. Values below are starting points, not tuned choices.
+
+[run]
+project_root = "../../.."          # relative to this TOML: selects Project/
+name = "cnn_vae_baseline"          # trained-model folder name; refused if it exists
+seed = 42
+device = "auto"                    # "auto" (cuda > mps > cpu), "cpu", "cuda", "mps"
+
+[data]
+dataset_path = "datasets/D01_L01A_dataset/dataset.h5"  # completed train_val build
+in_memory = true                   # 230,773 x 1 x 120 float32 windows ~ 111 MB
+num_workers = 0
+
+# One [[pvs]] entry per model channel, in the dataset's channel order.
+# pv must equal the dataset's stored expected_pv for that channel.
+# One entry  -> UnivariateTrainedModels/<type>/<name>/<run.name>/
+# Several    -> MultivariateTrainedModels/<run.name>/ (type/name optional)
+[[pvs]]
+pv = "VALCCG:D01_L01A:PRES"
+type = "Pressure"
+name = "D01_L01A"
+
+[optimizer]
+name = "adam"                      # "adam" or "adamw"
+learning_rate = 1e-3
+weight_decay = 0.0
+betas = [0.9, 0.999]
+eps = 1e-8
+
+[training]
+epochs = 30
+batch_size = 256                   # windows per optimizer step
+early_stopping_patience = 5        # omit to always run all epochs
+# gradient_clip_norm = 1.0         # omit to disable
+
+# "name" selects the registered model; every other key is parsed into that
+# model's hyperparameter dataclass (CNNVAEHyperparameters in model.py).
+[model]
+name = "cnn_vae"
+hidden_channels = [16, 32, 64]     # T = 120 -> 60 -> 30 -> 15 with stride 2
+kernel_size = 7                    # one value for all layers, or a list, e.g. [7, 5, 5]
+stride = 2                         # or one per layer, e.g. [1, 2, 2]
+padding = "same"                   # "same" = kernel_size // 2; or ints, e.g. [3, "same", "same"]
+latent_dim = 8
+beta = 1.0                         # KL weight; 1.0 = standard ELBO
+activation = "silu"                # "linear", "relu", "silu", "gelu"; or one per layer
+output_kernel_size = 7             # final stride-1 Conv1d (odd); 0 = none (stride-2 checkerboard remains)

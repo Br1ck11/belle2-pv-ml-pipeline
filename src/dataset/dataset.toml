@@ -1,0 +1,106 @@
+# Starter configuration for the independent dataset implementation.
+# This is a schema example, not a configured data build: fill the required
+# dates, PV identities/file lists, and abort durations before building.
+# The CLI only selects this file with --config; all settings come from TOML.
+# Numeric settings below are explicit starter examples to review for each run.
+# Paths INSIDE this file are relative to dataset.project_root below.
+# Absolute paths are also allowed. --config itself follows normal CLI paths.
+
+[dataset]
+# Relative to this TOML's directory; this example selects Project/.
+# Change when copying elsewhere. Omit to use the TOML directory itself.
+project_root = "../.."
+mode = "train_val" # "train_val" or "test"; supervised training is deferred.
+train_fraction = 0.7 # Fraction of grid points BEFORE windowing/filtering.
+
+# Required: quoted ISO timestamps with Z or an explicit UTC offset.
+# The requested interval is [start, end); end must be later than start.
+# Replace these placeholders and uncomment both entries.
+start = "2026-01-30T09:00:00+09:00"
+end = "2026-04-30T09:00:00+09:00"
+
+# Example ordered MODEL channels, referencing the ids in [[pvs]] below.
+# Both currents must be loaded for filtering even if removed from this list.
+pvs = ["signal_1"]
+
+# Example grid/window settings; edit for the intended experiment.
+sample_period_seconds = 1.0
+window_size_samples = 120 # T: first-to-last span is (T - 1) * sample period.
+stride_samples = 15 # S: integer grid steps between consecutive window starts.
+# These examples give a 60-second endpoint span and a 15-second stride.
+
+# Current ids must refer to distinct definitions in [[pvs]].
+ler_pv = "ler_current"
+her_pv = "her_current"
+ler_threshold = 400.0 # mA; every point must be strictly greater.
+her_threshold = 400.0 # mA; applied to normal windows in either mode.
+aborts_filepath = "data/2026_aborts.json"
+
+# Required for both modes: choose normal-window exclusion durations.
+# The commented numbers are examples from the reference, not agreed values.
+exclude_before_seconds = 300.0
+exclude_after_seconds = 120.0
+
+# Required in test mode: choose event association durations.
+# These commented numbers are also reference examples, not agreed values.
+# pre_abort_seconds = 300.0
+# post_abort_seconds = 120.0
+# Test pre/post association uses window END timestamps. Windows containing
+# an abort also qualify. Related windows bypass currents, not completeness.
+
+norm_mode = "zscore" # Explicit "zscore", "minmax", or "none".
+# Optional (default false): log10 of the MODEL channels' raw measurements
+# before sampling; statistics and normalization then use the log10 values,
+# so windows across orders of magnitude (e.g. pressure) stay distinguishable.
+# Values <= 0 become invalid. Currents used for filtering stay in mA.
+# A normalized test build must reuse statistics with the same setting.
+log_transform = false
+# Required only for normalized test builds: reuse saved TRAIN statistics.
+# Training builds fit their own parameters; never fit on validation or test.
+# statistics_filepath = "datasets/TRAINING_RUN/dataset.h5"
+
+# Processing batch size in candidate windows, not ML minibatch size.
+# This setting alone does not bound the memory used to load raw PV files.
+batch_size = 256
+# Destination directory, resolved relative to Project/ by the master script.
+# It must not exist yet; the writer creates it and refuses to overwrite it.
+# Contains dataset.h5 (all splits/metadata) and the unchanged config.toml copy.
+output_dir = "datasets/D01_L01A_dataset"
+
+# Fixed rules, not extra switches:
+# - Split the shared grid before sampling; restrict sources to each split.
+# - Discard incomplete trailing windows; reject any invalid required point.
+# - Count each selected training-grid point once per channel for statistics.
+# - Z-score uses ddof=0; exactly constant channels use scale 1, recorded in metadata.
+# - Save window timestamps and ordered channel identities.
+# - Save a copy of the input TOML alongside resolved configuration and statistics.
+# - Pass test labels/event associations alongside the retained windows.
+# Raw windows are appended first; finalization normalizes in bounded batches.
+# HDF5 complete=True is written only after all values and metadata are saved.
+
+# [[pvs]] creates a LIST of dictionaries, one entry per PV.
+# id is our configuration alias; expected_pv must exactly match the Parquet
+# pv field. filepaths accepts individual files or directories for this PV.
+# Directories expand to sorted immediate *.parquet files (not recursively).
+# The resolved file list is saved in metadata; duplicate files are rejected.
+# Empty identities/lists are placeholders and must fail build validation.
+# max_age_seconds is an inclusive source-age limit, not a count of reuses.
+# 2 seconds is an illustrative tolerance to assess separately for each PV.
+
+[[pvs]]
+id = "signal_1"
+expected_pv = "VALCCG:D01_L01A:PRES" # Fill with the exact stored PV identity.
+filepaths = ["data/2026ab/MTS_parquet/converted_flat2/vacuum/arch/mts/ArchiverStore/VALCCG/D01_L01A"] # Files or directories for this PV.
+max_age_seconds = 2.0
+
+[[pvs]]
+id = "ler_current"
+expected_pv = "BMLDCCT:CURRENT" # Fill with the exact stored LER current identity.
+filepaths = ["data/2026ab/MTS_parquet/converted_flat2/injection/arch/mts/ArchiverStore/BMLDCCT"]
+max_age_seconds = 2.0
+
+[[pvs]]
+id = "her_current"
+expected_pv = "BMHDCCT:CURRENT" # Fill with the exact stored HER current identity.
+filepaths = ["data/2026ab/MTS_parquet/converted_flat2/injection/arch/mts/ArchiverStore/BMHDCCT"]
+max_age_seconds = 2.0

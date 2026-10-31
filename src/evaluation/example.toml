@@ -1,0 +1,47 @@
+# Example model-test configuration for the evaluation package (src/evaluation).
+# Run from Project/:  python scripts/testModel.py --config src/evaluation/example.toml
+# Every key is listed: required ones are set, optional ones show their default.
+# Full reference: src/evaluation/README.md.
+#
+# It tests the quick CNN VAE run (T = 60) on the May 2026 D01_L01A test set:
+#   dataset: configs/D01_L01A_T60/dataset_test.toml -> datasets/D01_L01A_T60_test/
+#   model:   configs/D01_L01A_T60/train_cnn_vae.toml
+#            -> UnivariateTrainedModels/Pressure/D01_L01A/cnn_vae_T60_quicktest/
+# Output: <folder of [model].checkpoint>/<run.name>/, i.e. here
+#   UnivariateTrainedModels/Pressure/D01_L01A/cnn_vae_T60_quicktest/example_test/
+# An existing output folder is refused: change run.name for every new test.
+
+[run]
+project_root = "../.."               # relative to this TOML: Project/ (paths below are relative to it)
+name = "example_test"                # output folder name, created next to the checkpoint
+seed = 0                             # seeds sampling_z and the random window/abort choices
+device = "auto"                      # "auto" (cuda > mps > cpu), "cpu", "cuda" or "mps"
+
+[data]
+# A complete mode = "test" build, normalized with the model's TRAINING dataset
+# statistics (statistics_filepath in its dataset TOML).
+dataset_path = "datasets/D01_L01A_T60_test/dataset.h5"
+batch_size = 512                     # windows per forward pass (memory only, no effect on scores)
+
+[model]
+checkpoint = "UnivariateTrainedModels/Pressure/D01_L01A/cnn_vae_T60_quicktest/best.pt"
+VAE = true                           # must match the model: true for models with a random latent
+latent_mode = "z_mean"               # VAE only: "z_mean" (deterministic) or "sampling_z" (one seeded sample)
+
+[selection]                          # optional table; omit a key to use everything
+# categories = ["SBL", "RF"]         # only these abort categories (case-insensitive); each must
+                                     # occur in the test set, otherwise the run stops with an error
+# pvs = ["VALCCG:D01_L01A:PRES"]     # channels for score-vs-distance plots and statistics
+
+[reconstructions]                    # optional table: ModelReconstructions/<region>/
+windows_per_region = 3               # example windows per region (abort, pre_abort, post_abort, non_abort)
+sample = "random"                    # "random" (seeded) or "first" (earliest windows)
+
+[abort_distance]                     # optional table: ScoreVsAbortDistance/<abort>/<PV>.png
+n_aborts = 5                         # number of aborts with a score-vs-distance plot
+selection = "first"                  # "first" (chronological) or "random" (seeded)
+# event_ids = ["abort-1b6a2a3b666626ad"]   # explicit aborts instead of n_aborts/selection
+non_abort_seconds = 300.0            # no-abort time shown before the pre-abort region (0 = none)
+
+[exceedance]                         # optional table: RegionStatistics/exceedance_<PV>.png
+percentiles = [95.0, 99.0, 99.9]     # thresholds = these percentiles of the no-abort window scores

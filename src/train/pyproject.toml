@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "belle2-train"
+version = "0.1.0"
+description = "Model-independent, TOML-driven PyTorch training on belle2-dataset HDF5 files"
+readme = "README.md"
+requires-python = ">=3.11"
+# Also requires the local belle2-models package (src/models); install it first:
+#   pip install -e ./src/models -e ./src/train
+dependencies = ["numpy>=2.0", "h5py>=3.12", "torch>=2.2", "matplotlib>=3.8", "SciencePlots>=2.1"]
+
+[project.scripts]
+belle2-train = "train.train:main"
+
+[tool.setuptools]
+packages = ["train"]
+package-dir = {train = "."}
+include-package-data = false

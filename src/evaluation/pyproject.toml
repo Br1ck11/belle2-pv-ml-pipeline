@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "belle2-evaluation"
+version = "0.1.0"
+description = "Model-independent testing of trained models on belle2-dataset test sets"
+readme = "README.md"
+requires-python = ">=3.11"
+# Also requires the local packages belle2-models and belle2-train (src/models, src/train).
+dependencies = ["numpy>=2.0", "pandas>=2.2", "h5py>=3.12", "torch>=2.2", "matplotlib>=3.8", "SciencePlots>=2.1"]
+
+[project.scripts]
+belle2-test-model = "evaluation.evaluate:main"
+
+[tool.setuptools]
+packages = ["evaluation"]
+package-dir = {evaluation = "."}
+include-package-data = false
+
+[tool.setuptools.package-data]
+evaluation = ["example.toml"]

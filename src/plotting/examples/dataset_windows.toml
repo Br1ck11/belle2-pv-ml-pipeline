@@ -1,0 +1,22 @@
+# Plot stored windows of a dataset.h5 (no archive access).
+# Run from Project/:  python scripts/plot_dataset_windows.py --config src/plotting/examples/dataset_windows.toml
+# Output: Project/PVPlots/<name>/ {config.toml, window_<split>_<row>.png, metadata.json}
+
+[plot]
+project_root = "../../.."
+name = "D01_L01A_train_windows"
+dpi = 200
+
+[dataset]
+path = "datasets/D01_L01A_dataset/dataset.h5"
+split = "train"                      # "train", "val" or "test"
+values = "raw"                       # "stored" (as saved) or "raw" (saved normalization inverted)
+
+[select]
+# Either explicit rows:  indices = [0, 1000, 2000]
+# or filters with a limit:
+label = "non_abort"                  # e.g. "pre_abort_SBL", "SBL", "post_abort_BeamLoss"
+# event_id = "abort-..."
+limit = 4
+sample = "random"                    # "first" (chronological) or "random"
+seed = 1

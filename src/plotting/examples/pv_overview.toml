@@ -1,0 +1,32 @@
+# General PV overview: beam currents (top), any PV(s) (bottom), aborts.
+# Run from Project/:  python scripts/plot_pv_overview.py --config src/plotting/examples/pv_overview.toml
+# Output: Project/PVPlots/<name>/ {config.toml (exact copy), overview.png, metadata.json}
+
+[plot]
+project_root = "../../.."            # relative to this TOML: selects Project/
+name = "D07_L09_2026-02-06"          # folder name in PVPlots/; refused if it exists
+start = "2026-02-06T07:15:00Z"       # explicit timezone; interval [start, end)
+end = "2026-02-07T08:45:00Z"
+summary_period = "1s"                # display bins (min/median/max), e.g. "1s", "10s", "1min"
+y_scale = "auto"                     # bottom panel: "auto" (log if all > 0), "log", "linear"
+dpi = 300
+# title = "..."                      # optional
+
+[aborts]
+filepath = "data/2026_aborts.json"
+categories = []                      # [] = all; e.g. ["SBL"] or ["SBL", "BeamLoss"] (case-insensitive)
+mark_pressure_bursts = true          # gold markers where the catalogue pressure_burst names a plotted location
+
+# Optional top panel. Omit [currents] for a single-panel plot.
+[currents]
+unit = "mA"
+ler = { pv = "BMLDCCT:CURRENT", filepaths = ["data/2026ab/MTS_parquet/converted_flat2/injection/arch/mts/ArchiverStore/BMLDCCT"] }
+her = { pv = "BMHDCCT:CURRENT", filepaths = ["data/2026ab/MTS_parquet/converted_flat2/injection/arch/mts/ArchiverStore/BMHDCCT"] }
+
+# Bottom panel: one or more PVs sharing one unit. filepaths: files or
+# directories (immediate *.parquet), exactly as in the dataset TOML.
+[[pvs]]
+pv = "VALCCG:D07_L09:PRES"
+filepaths = ["data/2026ab/MTS_parquet/converted_flat2/vacuum/arch/mts/ArchiverStore/VALCCG/D07_L09"]
+unit = "unknown"
+# label = "D07_L09 pressure"         # optional legend/axis label

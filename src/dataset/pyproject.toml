@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "belle2-dataset"
+version = "0.1.0"
+description = "Framework-independent multivariate PV datasets for Belle II beam-abort studies"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["numpy>=2.0", "pandas>=2.2", "pyarrow>=18", "h5py>=3.12"]
+
+[project.scripts]
+belle2-build-dataset = "dataset.builder:main"
+belle2-dataset-demo = "dataset.demo:main"
+
+[tool.setuptools]
+packages = ["dataset"]
+package-dir = {dataset = "."}
+include-package-data = false
+
+[tool.setuptools.package-data]
+dataset = ["dataset.toml"]
